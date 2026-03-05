@@ -15,23 +15,104 @@ You can also use the model directly on the HuggingFace Model Hub [here](https://
 
 Please refer to our paper titled: "A Pilot Study for BERT Language Modelling and Morphological Analysis for Ancient and Medieval Greek". In Proceedings of The 5th Joint SIGHUM Workshop on Computational Linguistics for Cultural Heritage, Social Sciences, Humanities and Literature (LaTeCH-CLfL 2021).
 
-## How to use
+## Installation & Setup
 
-Requirements:
+### 1. Python-Umgebung erstellen
 
-```python
-pip install transformers
-pip install unicodedata
-pip install flair
+```bash
+git clone https://github.com/tioannidis/Ancient-Greek-BERT.git
+cd Ancient-Greek-BERT
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 ```
 
-Can be directly used from the HuggingFace Model Hub with:
+### 2. Abhängigkeiten installieren
 
+Die folgenden Versionen wurden getestet und funktionieren zusammen:
+
+```bash
+pip install flair==0.15.1
+pip install transformers==5.3.0
+pip install torch==2.10.0
+pip install huggingface_hub==1.5.0
+```
+
+> **Hinweis:** `flair==0.15.1` und neuere `transformers`-Versionen haben einen bekannten Inkompatibilitätsfehler (`LayoutLMv2FeatureExtractor` wurde umbenannt). Dieser wird automatisch durch einen Patch in `test_tagger.py` umgangen.
+
+### 3. FLAIR-Patch anwenden
+
+Einmalig ausführen, um den Namenskonflikt in der FLAIR-Bibliothek zu beheben:
+
+```bash
+python -c "
+import site, os
+p = os.path.join(site.getsitepackages()[0], 'flair/embeddings/transformer.py')
+t = open(p).read()
+open(p, 'w').write(t.replace('LayoutLMv2FeatureExtractor,', 'LayoutLMv2ImageProcessor as LayoutLMv2FeatureExtractor,'))
+print('Patch erfolgreich.')
+"
+```
+
+### 4. POS-Tagger-Modell herunterladen
+
+Das Modell (`final-model.pt`, ~448 MB) ist nicht im Repository enthalten und muss manuell heruntergeladen werden, da es die GitHub-Dateigrößenbegrenzung überschreitet.
+
+**Option A – Git LFS (empfohlen, falls verfügbar):**
+```bash
+brew install git-lfs  # macOS; Linux: sudo apt install git-lfs
+git lfs install
+git remote add upstream https://github.com/pranaydeeps/Ancient-Greek-BERT.git
+git lfs fetch upstream
+git lfs checkout
+```
+
+**Option B – Manuell:**
+Lade `final-model.pt` und `best-model.pt` direkt aus dem [Original-Repository](https://github.com/pranaydeeps/Ancient-Greek-BERT) herunter und lege sie in den Ordner `SuperPeitho-FLAIR-v2/`.
+
+### 5. BERT-Basismodell herunterladen
+
+Das FLAIR-Modell benötigt intern das Ancient-Greek-BERT-Basismodell, das von HuggingFace geladen wird:
+
+```bash
+python -c "
+from transformers import AutoTokenizer, AutoModel
+path = '../LM/SuperPeitho-v1'
+AutoTokenizer.from_pretrained('pranaydeeps/Ancient-Greek-BERT').save_pretrained(path)
+AutoModel.from_pretrained('pranaydeeps/Ancient-Greek-BERT').save_pretrained(path)
+print('Fertig.')
+"
+```
+
+> Das Modell (~450 MB) wird unter `../LM/SuperPeitho-v1` (relativ zum Projektordner) gespeichert, da dieser Pfad beim Training fest eingebaut wurde.
+
+### 6. Tagger testen
+
+```bash
+python test_tagger.py
+```
+
+Erwartete Ausgabe für `Γνῶθι σεαυτόν.`:
+
+```
+  ┌──────────┬───────────┬────────────────────────────────────┐
+  │ Wort     │ Tag       │ Bedeutung                          │
+  ├──────────┼───────────┼────────────────────────────────────┤
+  │ Γνῶθι   │ v2saima-- │ Verb, 2. Person, Singular, Aorist, Imperativ, Aktiv │
+  ├──────────┼───────────┼────────────────────────────────────┤
+  │ σεαυτόν │ p-s---ma- │ Pronomen, Singular, Maskulin, Akkusativ │
+  └──────────┴───────────┴────────────────────────────────────┘
+```
+
+---
+
+## How to use (original)
+
+Can be directly used from the HuggingFace Model Hub with:
 
 ```python
 from transformers import AutoTokenizer, AutoModel
 tokeniser = AutoTokenizer.from_pretrained("pranaydeeps/Ancient-Greek-BERT")
-model = AutoModel.from_pretrained("pranaydeeps/Ancient-Greek-BERT")  
+model = AutoModel.from_pretrained("pranaydeeps/Ancient-Greek-BERT")
 ```
 
 ## Fine-tuning for POS/Morphological Analysis

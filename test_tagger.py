@@ -16,7 +16,7 @@ for emb in tagger.embeddings.embeddings:
         emb.tokenizer_needs_ocr_boxes = False
 
 # Example Ancient Greek sentence: "I release the horses"
-sentence = Sentence("λύω τοὺς ἵππους")
+sentence = Sentence("Γνῶθι σεαυτόν.")
 tagger.predict(sentence)
 
 POS = {'n': 'Nomen', 'v': 'Verb', 'a': 'Adjektiv', 'd': 'Adverb', 'l': 'Artikel',
