@@ -28,16 +28,21 @@ source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 ### 2. Abhängigkeiten installieren
 
-Die folgenden Versionen wurden getestet und funktionieren zusammen:
+Alle Abhängigkeiten sind in `requirements.txt` hinterlegt und können mit einem Befehl installiert werden:
+
+```bash
+pip install -r requirements.txt
+```
+
+Alternativ einzeln:
 
 ```bash
 pip install flair==0.15.1
-pip install transformers==5.3.0
+pip install "transformers>=4.25.0,<5.0.0"
 pip install torch==2.10.0
-pip install huggingface_hub==1.5.0
 ```
 
-> **Hinweis:** `flair==0.15.1` und neuere `transformers`-Versionen haben einen bekannten Inkompatibilitätsfehler (`LayoutLMv2FeatureExtractor` wurde umbenannt). Dieser wird automatisch durch einen Patch in `test_tagger.py` umgangen.
+> **Hinweis:** `flair==0.15.1` benötigt `transformers<5.0.0`. `transformers>=5.0.0` ist **nicht** kompatibel. `huggingface_hub` wird automatisch in der richtigen Version mitinstalliert und darf nicht manuell auf `>=1.0` fixiert werden.
 
 ### 3. FLAIR-Patch anwenden
 
